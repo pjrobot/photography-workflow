@@ -1,0 +1,11 @@
+# Secrets
+.env
+.env.local
+*.secret
+
+# Local Databases & Caches
+*.db
+*.sqlite
+data.db
+library.db
+thumbnails/

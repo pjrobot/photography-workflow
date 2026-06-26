@@ -1,0 +1,16 @@
+services:
+  digikam_db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: digikam
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - digikam_db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+
+volumes:
+  digikam_db_data:
