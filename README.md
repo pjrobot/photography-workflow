@@ -1,16 +1,43 @@
-# Photography Infrastructure as Code
+# Photography Workflow
 
 This repository contains the configuration files, scripts, and deployment manifests for my open-source photography workflow. It treats photography asset management and raw processing as a code deployment, allowing for easy replication across multiple machines (desktop, travel laptop, home server).
 
 ## 🛠 The Stack
 
-Ingestion: Rapid Photo Downloader (Linux-based EXIF-aware automated ingestion)
+Ingestion: [Rapid Photo Downloader](https://damonlynch.net/rapid/) (Linux-based EXIF-aware automated ingestion)
 
-Digital Asset Management (DAM): DigiKam (backed by a remote MariaDB instance)
+Digital Asset Management (DAM): [DigiKam](https://www.digikam.org/) (backed by a remote MariaDB instance)
 
-Raw Processing: Darktable (configured for scene-referred workflows and Fujifilm X-Trans files)
+Raw Processing: [Darktable](https://www.darktable.org/) (configured for scene-referred workflows and Fujifilm X-Trans files)
 
 Serving & Presentation: Immich (Docker-hosted, pointing to Darktable export directories)
+
+Database: MariaDB (Docker-hosted, backing DigiKam's asset index)
+
+Containers: Docker (runs MariaDB and Immich)
+
+Config Management: GNU Stow (symlinks repo configs into `~/.config`)
+
+Cloud Sync: rclone (migrates photo library from Google Drive to NAS)
+
+## 📸 Workflow
+
+```mermaid
+flowchart TD
+    A[SD Card] --> B[Rapid Photo Downloader]
+    B --> C["~/Pictures\n(RAWs organised by date/shoot)"]
+    C --> D[DigiKam]
+    D --> E[Cull & rate]
+    D --> F[Metadata, tags, albums]
+    E --> G["Darktable\n(4★+ RAWs only)"]
+    F --> G
+    G --> H[Edit & export JPEGs]
+    H --> I["/mnt/nas/Exports"]
+    I --> J[Immich]
+    J --> K[Browse & share finished work]
+```
+
+RAWs stay in `~/Pictures` (and eventually on the NAS). DigiKam's role ends once files are rated and handed to Darktable. Immich only ever sees the finished JPEGs.
 
 ## 📂 Repository Structure
 
@@ -85,22 +112,48 @@ Run docker compose up -d (Docker automatically reads the .env file).
 
 To replicate this workflow on a new Linux machine:
 
-Install dependencies:
+### 1. Install GUI applications
 
-`sudo apt install stow darktable digikam rapid-photo-downloader docker-compose`
+Install via your distro's app store (Flatpak recommended for latest versions):
 
-Clone this repository:
+- [Darktable](https://www.darktable.org/)
+- [DigiKam](https://www.digikam.org/)
+- [Rapid Photo Downloader](https://damonlynch.net/rapid/)
 
-`git clone https://github.com/pjrobot/photography-workflow.git`
-
-Use Stow to symlink the configurations to your ~/.config directory:
+### 2. Install CLI tools
 
 ```bash
-cd ~/.dotfiles
+# Dotfile symlink manager
+sudo apt install stow
+
+# Cloud sync (Google Drive → NAS migration)
+sudo apt install rclone
+
+# Container runtime
+sudo apt install docker.io docker-compose-v2
+sudo usermod -aG docker $USER  # log out and back in after this
+```
+
+### 3. Clone this repository
+
+```bash
+git clone https://github.com/pjrobot/photography-workflow.git
+```
+
+### 4. Symlink configs with Stow
+
+```bash
+cd photography-workflow
 stow -t ~/.config darktable
 ```
 
-Set up your .env file in the docker directory and spin up your databases.
+### 5. Set up your .env file and spin up the database
+
+```bash
+cp docker/.env.example docker/.env
+# Edit docker/.env with your credentials
+docker compose -f docker/docker-compose.yml up -d
+```
 
 ## 📜 Included Scripts
 

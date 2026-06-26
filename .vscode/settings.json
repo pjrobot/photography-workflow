@@ -6,6 +6,7 @@
         "dtstyle",
         "EXIF",
         "Immich",
-        "luarc"
+        "luarc",
+        "rclone"
     ]
 }
